@@ -30,11 +30,15 @@ class Grok(BaseLLM):
         else:
             self.max_new_tokens = max_new_tokens
 
-    def request(self, query: str) -> str:
+    def request(self, query: str, system_prompt: str = None) -> str:
+        messages = []
+        if system_prompt:
+            messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": query})
 
         resp = self.client.chat.completions.create(
             model=self.model_name,
-            messages=[{"role": "user", "content": query}],
+            messages=messages,
             temperature=self.temperature,
             max_tokens=self.max_new_tokens,
         )
@@ -42,7 +46,8 @@ class Grok(BaseLLM):
         res_text = resp.choices[0].message.content
         if self.report and hasattr(resp, "usage"):
             logger.info(
-                f"[Grok] {self.model_name} token consumed: {resp.usage.total_tokens}")
+                f"[Claude] {self.model_name} token consumed: {resp.usage.total_tokens}"
+            )
 
         return res_text
 

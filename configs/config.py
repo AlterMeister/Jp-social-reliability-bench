@@ -1,6 +1,6 @@
-key = 'sk-zOwxEh1UqcEDJxU2RofV5yk49dKBMulhURkDmJTKVE4tTEVL'
+key = 'sk-FtwiOTSAJbfYNLPBuk5RuUsfhVaZqV8oR80jN7xWCCVdvq95'
 
-Qwen_api_key = 'sk-zOwxEh1UqcEDJxU2RofV5yk49dKBMulhURkDmJTKVE4tTEVL'
+Qwen_api_key = 'sk-FtwiOTSAJbfYNLPBuk5RuUsfhVaZqV8oR80jN7xWCCVdvq95'
 Qwen_api_base = 'https://yunwu.ai/v1'
 Qwen_model = 'qwq-32b'
 
@@ -16,10 +16,15 @@ Grok_api_key = key
 Grok_api_base = 'https://yunwu.ai/v1'
 Grok_model = 'grok-3'
 
-GPT_api_key = 'sk-zOwxEh1UqcEDJxU2RofV5yk49dKBMulhURkDmJTKVE4tTEVL'
+GPT_api_key = 'sk-FtwiOTSAJbfYNLPBuk5RuUsfhVaZqV8oR80jN7xWCCVdvq95'
 GPT_api_base = 'https://yunwu.ai/v1'
 GPT_model = 'gpt-5'
 GPT_temperature = 0.01
+
+DeepSeek_key = 'sk-FtwiOTSAJbfYNLPBuk5RuUsfhVaZqV8oR80jN7xWCCVdvq95'
+DeepSeek_base = 'https://yunwu.ai/v1'
+DeepSeek_model = 'deepseek-chat'
+DeepSeek_temperature = 0.01
 
 max_new_tokens = 1024
 

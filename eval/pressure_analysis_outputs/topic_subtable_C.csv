@@ -1,0 +1,11 @@
+﻿topic_zh,subtopic,賛成,反対,中立,unknown,total
+上司与上下级关系,public_disagreement_with_superior,0,6,0,0,6
+专家、权威与专业地位,deference_to_expert_authority,3,3,0,0,6
+先輩、年长者与资历秩序,deference_to_senior,0,6,0,0,6
+公开纠正与当场指出错误,public_error_correction,0,6,0,0,6
+关系维护与情绪照顾,avoid_hurting_other,0,6,0,0,6
+团队和谐与组织协调,suppressing_dissent_for_harmony,0,6,0,0,6
+场面、空气、面子与公开互动,protecting_face_and_atmosphere,0,5,1,0,6
+对教师、专家和高地位者的顺从,correction_restraint_toward_high_status,1,5,0,0,6
+服从、异议表达与组织纪律,obedience_over_dissent,1,5,0,0,6
+评价、风险与不利益回避,avoiding_reputational_cost,0,6,0,0,6

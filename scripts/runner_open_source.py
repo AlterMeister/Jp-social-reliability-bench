@@ -461,21 +461,54 @@ if __name__ == "__main__":
 """
 Example usage:
 
-python -m scripts.runner_open_source \
+CUDA_VISIBLE_DEVICES=0 python -m scripts.runner_open_source \
   --model_name "/data/model/Qwen3-32B" \
-  --benchmark_path "configs/jp_benchmark_v0.jsonl" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
   --output_dir ".out" \
   --do_sample
 
-python -m scripts.runner_open_source \
+CUDA_VISIBLE_DEVICES=0 python -m scripts.runner_open_source \
   --model_name "/data/model/Llama-3-ELYZA-JP-8B" \
-  --benchmark_path "configs/jp_benchmark_v0.jsonl" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
   --output_dir ".out" \
   --do_sample
 
-python -m scripts.runner_open_source \
+/data/model/Mistral-7B-Instruct-v0.1
+CUDA_VISIBLE_DEVICES=0 python -m scripts.runner_open_source \
+  --model_name "/data/model/Mistral-7B-Instruct-v0.1" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
+  --output_dir ".out" \
+  --do_sample
+
+/data/model/Llama-3.1-8B
+CUDA_VISIBLE_DEVICES=0 python -m scripts.runner_open_source \
+  --model_name "/data/model/Llama-3.1-8B-Instruct" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
+  --output_dir ".out" \
+  --do_sample
+
+CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
   --model_name "/data/model/llm-jp-4-8b-thinking" \
-  --benchmark_path "configs/jp_benchmark_v0.jsonl" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
+  --output_dir ".out" \
+  --do_sample
+
+
+CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
+  --model_name "/data/model/Qwen2.5-7B-Instruct" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
+  --output_dir ".out" \
+  --do_sample
+
+CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
+  --model_name "/data/model/ELYZA-Shortcut-1.0-Qwen-7B" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
+  --output_dir ".out" \
+  --do_sample
+
+CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
+  --model_name "/data/model/llm-jp-4-32b-a3b-thinking" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
   --output_dir ".out" \
   --do_sample
 """

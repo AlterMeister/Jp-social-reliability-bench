@@ -1,7 +1,9 @@
 from src.llms_closed.api_qwen import Qwen
 from src.llms_closed.api_gpt import GPT
+from src.llms_closed.api_deepseek import DeepSeek
 from src.llms_closed.api_claude import Claude
 from src.llms_closed.api_grok import Grok
+from src.llms_closed.api_gemini import Gemini
 
 import argparse
 import json
@@ -30,7 +32,7 @@ def parse_args():
         "--provider",
         type=str,
         required=True,
-        choices=["claude", "gemini", "qwen"],
+        choices=["claude", "gemini", "qwen", "gpt", "deepseek"],
         help="API model provider",
     )
     parser.add_argument(
@@ -272,6 +274,20 @@ def build_llm(
             max_new_tokens=max_new_tokens,
             report=report,
         )
+    if provider == "gpt":
+        return GPT(
+            model_name=model_name,
+            temperature=temperature,
+            max_new_tokens=max_new_tokens,
+            report=report,
+        )
+    if provider == "deepseek":
+        return DeepSeek(
+            model_name=model_name,
+            temperature=temperature,
+            max_new_tokens=max_new_tokens,
+            report=report,
+        )
     raise ValueError(f"Unsupported provider: {provider}")
 
 
@@ -412,28 +428,46 @@ if __name__ == "__main__":
         print(f"Saved results to: {output_path}")
 
 '''
-python -m src.runners.runner_closed_source \
+python -m scripts.runner_closed_source \
   --provider claude \
   --model_name claude-haiku-4-5-20251001 \
-  --benchmark_path data/jp_prompts/claim_001.jsonl \
+  --benchmark_path configs/jp_benchmark_v0.jsonl \
   --output_dir .out \
   --temperature 0.01 \
   --max_new_tokens 128 \
   --report
 
-python -m src.runners.runner_closed_source \
+python -m scripts.runner_closed_source \
   --provider gemini \
   --model_name gemini-3-flash-preview \
-  --benchmark_path data/jp_prompts/claim_001.jsonl \
+  --benchmark_path configs/jp_benchmark_v0.jsonl \
   --output_dir .out \
   --temperature 0.01 \
   --max_new_tokens 128 \
   --report
 
-python -m src.runners.runner_closed_source \
+python -m scripts.runner_closed_source \
   --provider qwen \
   --model_name qwq-32b \
-  --benchmark_path data/jp_prompts/claim_001.jsonl \
+  --benchmark_path configs/jp_benchmark_v0.jsonl \
+  --output_dir .out \
+  --temperature 0.01 \
+  --max_new_tokens 128 \
+  --report
+
+python -m scripts.runner_closed_source \
+  --provider gpt \
+  --model_name gpt-5.1 \
+  --benchmark_path configs/jp_benchmark_v0.jsonl \
+  --output_dir .out \
+  --temperature 0.01 \
+  --max_new_tokens 128 \
+  --report
+
+python -m scripts.runner_closed_source \
+  --provider deepseek \
+  --model_name deepseek-chat \
+  --benchmark_path configs/jp_benchmark_v0.jsonl \
   --output_dir .out \
   --temperature 0.01 \
   --max_new_tokens 128 \
