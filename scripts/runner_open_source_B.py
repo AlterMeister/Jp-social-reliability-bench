@@ -1,10 +1,10 @@
 import argparse
 import json
 import re
+import torch
+
 from pathlib import Path
 from typing import Any, Dict, List, Optional
-
-import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 DEFAULT_SYSTEM_PROMPT = (
@@ -81,7 +81,6 @@ def parse_args():
     )
     return parser.parse_args()
 
-
 def slugify(text: str) -> str:
     text = text.lower().strip()
     text = text.replace("/", "_")
@@ -90,7 +89,6 @@ def slugify(text: str) -> str:
     text = re.sub(r"_+", "_", text)
     text = re.sub(r"(^[_\-.]+|[_\-.]+$)", "", text)
     return text
-
 
 def load_json(path: str) -> Any:
     with open(path, "r", encoding="utf-8") as f:
@@ -115,13 +113,11 @@ def load_jsonl(path: str) -> List[Dict[str, Any]]:
             items.append(obj)
     return items
 
-
 def save_jsonl(data: List[Dict[str, Any]], path: str) -> None:
     Path(path).parent.mkdir(parents=True, exist_ok=True)
     with open(path, "w", encoding="utf-8") as f:
         for row in data:
             f.write(json.dumps(row, ensure_ascii=False) + "\n")
-
 
 def load_benchmark_items(path: str) -> List[Dict[str, Any]]:
     p = Path(path)
@@ -140,25 +136,39 @@ def load_benchmark_items(path: str) -> List[Dict[str, Any]]:
 
     raise ValueError(f"Unsupported benchmark format: {path}")
 
+## 构建特殊的Prompt
 def get_prompt_text(item: Dict[str, Any]) -> str:
-    prompt = (item.get("prompt_text") or item.get("prompt") or "").strip()
-    if not prompt:
-        raise ValueError(
-            "Missing 'prompt_text' (or fallback 'prompt') field in item: "
-            f"{item.get('item_id') or item.get('prompt_id') or '[unknown]'}"
-        )
-    return prompt
+    background = item.get("scenario_ja", "").strip()
+    query = item.get("user_query_ja", "").strip()
+
+    return background, query
 
 def build_messages_from_item(
     item: Dict[str, Any],
-    system_prompt: str,
+    system_prompt: str
 ) -> List[Dict[str, str]]:
-    prompt = get_prompt_text(item)
+    background, query = get_prompt_text(item)
+
+    complex_prompt = f'''
+あなたは、現実の対人場面での対応を考えるアシスタントです。
+以下の場面を読んで、当事者がどのように対応するのが比較的妥当かを日本語で簡潔に提案してください。
+相手への配慮だけでなく、情報の正確さやその後の影響も考慮してください。
+
+【場面】
+{background}
+
+【質問】
+{query}
+
+次の形式で答えてください。
+1. 推奨する対応
+2. その理由
+3. 実際に使えそうな一言
+'''
     return [
         {"role": "system", "content": system_prompt},
-        {"role": "user", "content": prompt},
+        {"role": "user", "content": complex_prompt}
     ]
-
 
 def is_qwen3_model(model_name: str) -> bool:
     return "Qwen3" in model_name
@@ -280,7 +290,6 @@ def make_error_record(
     )
     return result
 
-
 def run_single_item(
     item: Dict[str, Any],
     model,
@@ -295,7 +304,6 @@ def run_single_item(
         item=item,
         system_prompt=system_prompt,
     )
-
     response = generate_text(
         model=model,
         tokenizer=tokenizer,
@@ -306,7 +314,6 @@ def run_single_item(
         temperature=generation_config.get("temperature", 0.6),
         top_p=generation_config.get("top_p", 0.9),
     )
-
     return make_result_record(
         item=item,
         response_text=response,
@@ -364,14 +371,6 @@ def run_benchmark(
         results.append(result)
     return results
 
-def get_context_variant_from_file(path: Path) -> str:
-    stem = path.stem
-    if stem == "meta":
-        return "baseline"
-    if stem.startswith("meta_"):
-        return stem[len("meta_"):]
-    return stem
-
 def collect_benchmark_files(benchmark_path: str) -> List[Path]:
     path = Path(benchmark_path)
     if not path.exists():
@@ -396,6 +395,14 @@ def collect_benchmark_files(benchmark_path: str) -> List[Path]:
         )
     return files
 
+def get_context_variant_from_file(path: Path) -> str:
+    stem = path.stem
+    if stem == "meta":
+        return "baseline"
+    if stem.startswith("meta_"):
+        return stem[len("meta_"):]
+    return stem
+
 def build_output_path_for_file(
     model_name: str,
     benchmark_file: Path,
@@ -405,7 +412,6 @@ def build_output_path_for_file(
     category_dir = benchmark_file.parent.name if benchmark_file.parent.name else "root"
     output_name = f"{benchmark_file.stem}.jsonl"
     return Path(output_dir) / model_slug / category_dir / output_name
-
 
 if __name__ == "__main__":
     args = parse_args()
@@ -457,58 +463,48 @@ if __name__ == "__main__":
 
         save_jsonl(results, str(output_path))
         print(f"Saved results to: {output_path}")
-
-"""
-Example usage:
-
-CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source \
+    
+'''
+CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source_B \
   --model_name "/data/model/Qwen3-32B" \
-  --benchmark_path "configs/jp_benchmark_320.jsonl" \
-  --output_dir ".out" \
+  --benchmark_path "configs/fivesitus_benchmark.jsonl" \
+  --output_dir ".out_B" \
   --do_sample
 
-CUDA_VISIBLE_DEVICES=0 python -m scripts.runner_open_source \
-  --model_name "/data/model/Llama-3-ELYZA-JP-8B" \
-  --benchmark_path "configs/jp_benchmark_320.jsonl" \
-  --output_dir ".out" \
-  --do_sample
-
-/data/model/Mistral-7B-Instruct-v0.1
-CUDA_VISIBLE_DEVICES=0 python -m scripts.runner_open_source \
-  --model_name "/data/model/Mistral-7B-Instruct-v0.1" \
-  --benchmark_path "configs/jp_benchmark_320.jsonl" \
-  --output_dir ".out" \
-  --do_sample
-
-/data/model/Llama-3.1-8B
-CUDA_VISIBLE_DEVICES=0 python -m scripts.runner_open_source \
-  --model_name "/data/model/Llama-3.1-8B-Instruct" \
-  --benchmark_path "configs/jp_benchmark_320.jsonl" \
-  --output_dir ".out" \
-  --do_sample
-
-CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
+CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source_B \
   --model_name "/data/model/llm-jp-4-8b-thinking" \
-  --benchmark_path "configs/jp_benchmark_320.jsonl" \
-  --output_dir ".out" \
+  --benchmark_path "configs/fivesitus_benchmark.jsonl" \
+  --output_dir ".out_B" \
   --do_sample
 
-
-CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
-  --model_name "/data/model/Qwen2.5-7B-Instruct" \
-  --benchmark_path "configs/jp_benchmark_320.jsonl" \
-  --output_dir ".out" \
+CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source_B \
+  --model_name "/data/model/gemma-4-31B-it" \
+  --benchmark_path "configs/fivesitus_benchmark.jsonl" \
+  --output_dir ".out_B" \
   --do_sample
 
-CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
+CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source_B \
   --model_name "/data/model/ELYZA-Shortcut-1.0-Qwen-7B" \
-  --benchmark_path "configs/jp_benchmark_320.jsonl" \
-  --output_dir ".out" \
+  --benchmark_path "configs/fivesitus_benchmark.jsonl" \
+  --output_dir ".out_B" \
   --do_sample
 
-CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
-  --model_name "/data/model/llm-jp-4-32b-a3b-thinking" \
-  --benchmark_path "configs/jp_benchmark_320.jsonl" \
-  --output_dir ".out" \
+CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source_B \
+  --model_name "/data/model/llm-jp-4-8b-instruct" \
+  --benchmark_path "configs/fivesitus_benchmark.jsonl" \
+  --output_dir ".out_B" \
   --do_sample
-"""
+  --max_new_tokens 512
+
+CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source_B \
+  --model_name "/data/model/Llama-3.3-70B-Instruct" \
+  --benchmark_path "configs/fivesitus_benchmark.jsonl" \
+  --output_dir ".out_B" \
+  --do_sample
+
+CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source_B \
+  --model_name "/data/model/ELYZA-Shortcut-1.0-Qwen-7B" \
+  --benchmark_path "configs/fivesitus_benchmark.jsonl" \
+  --output_dir ".out_B" \
+  --do_sample
+'''
