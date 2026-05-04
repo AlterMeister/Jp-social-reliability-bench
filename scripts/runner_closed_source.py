@@ -7,6 +7,7 @@ from src.llms_closed.api_gemini import Gemini
 
 import argparse
 import json
+import time
 import re
 from importlib import import_module
 from pathlib import Path
@@ -81,6 +82,18 @@ def parse_args():
         "--report",
         action="store_true",
         help="Whether to log token usage if the provider returns it.",
+    )
+    parser.add_argument(
+        "--max_retries",
+        type=int,
+        default=5,
+        help="Maximum retry attempts when API request fails. Default: 5",
+    )
+    parser.add_argument(
+        "--retry_sleep",
+        type=float,
+        default=5.0,
+        help="Seconds to sleep between retries. Default: 5.0",
     )
     return parser.parse_args()
 
@@ -291,6 +304,53 @@ def build_llm(
     raise ValueError(f"Unsupported provider: {provider}")
 
 
+def request_with_retry(
+    llm,
+    prompt_text: str,
+    system_prompt: str,
+    max_retries: int = 5,
+    retry_sleep: float = 5.0,
+) -> str:
+    last_error: Optional[Exception] = None
+
+    for attempt in range(1, max_retries + 1):
+        try:
+            # 优先尝试带 system_prompt 的接口
+            try:
+                response_text = llm.request(prompt_text, system_prompt=system_prompt)
+            except TypeError:
+                # 兼容还没改签名的 request(query)
+                merged_prompt = f"{system_prompt}\n\n{prompt_text}" if system_prompt else prompt_text
+                response_text = llm.request(merged_prompt)
+
+            # 有些 API 失败可能不 raise error，而是返回 None 或空字符串
+            if response_text is None:
+                raise ValueError("API returned None response.")
+
+            response_text = str(response_text).strip()
+            if not response_text:
+                raise ValueError("API returned empty response.")
+
+            return response_text
+
+        except Exception as e:
+            last_error = e
+            print(
+                f"[WARN] API request failed. "
+                f"Attempt {attempt}/{max_retries}. "
+                f"Error: {e}"
+            )
+
+            if attempt < max_retries:
+                print(f"[INFO] Sleeping {retry_sleep} seconds before retry...")
+                time.sleep(retry_sleep)
+
+    raise RuntimeError(
+        f"API request failed after {max_retries} attempts. "
+        f"Last error: {last_error}"
+    )
+
+
 def run_single_item(
     item: Dict[str, Any],
     llm,
@@ -299,16 +359,18 @@ def run_single_item(
     model_name: str,
     benchmark_file: Optional[str] = None,
     context_variant: Optional[str] = None,
+    max_retries: int = 5,
+    retry_sleep: float = 5.0,
 ) -> Dict[str, Any]:
     prompt_text = get_prompt_text(item)
 
-    # 优先尝试带 system_prompt 的接口
-    try:
-        response_text = llm.request(prompt_text, system_prompt=system_prompt)
-    except TypeError:
-        # 兼容你当前还没改签名的 request(query)
-        merged_prompt = f"{system_prompt}\n\n{prompt_text}" if system_prompt else prompt_text
-        response_text = llm.request(merged_prompt)
+    response_text = request_with_retry(
+        llm=llm,
+        prompt_text=prompt_text,
+        system_prompt=system_prompt,
+        max_retries=max_retries,
+        retry_sleep=retry_sleep,
+    )
 
     return make_result_record(
         item=item,
@@ -330,6 +392,8 @@ def run_benchmark(
     limit: Optional[int] = None,
     benchmark_file: Optional[str] = None,
     context_variant: Optional[str] = None,
+    max_retries: int = 5,
+    retry_sleep: float = 5.0,
 ) -> List[Dict[str, Any]]:
     target_items = items[:limit] if limit is not None else items
     results: List[Dict[str, Any]] = []
@@ -352,6 +416,8 @@ def run_benchmark(
                 model_name=model_name,
                 benchmark_file=benchmark_file,
                 context_variant=context_variant,
+                max_retries=max_retries,
+                retry_sleep=retry_sleep,
             )
         except Exception as e:
             result = make_error_record(
@@ -422,6 +488,8 @@ if __name__ == "__main__":
             limit=args.limit,
             benchmark_file=benchmark_file.name,
             context_variant=context_variant,
+            max_retries=args.max_retries,
+            retry_sleep=args.retry_sleep,
         )
 
         save_jsonl(results, str(output_path))

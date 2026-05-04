@@ -493,7 +493,18 @@ CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
   --output_dir ".out" \
   --do_sample
 
+CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
+  --model_name "/data/model/llm-jp-4-8b-instruct" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
+  --output_dir ".out" \
+  --do_sample
 
+CUDA_VISIBLE_DEVICES=2 python -m scripts.runner_open_source \
+  --model_name "/data/model/Llama-3.3-70B-Instruct" \
+  --benchmark_path "configs/jp_benchmark_320.jsonl" \
+  --output_dir ".out" \
+  --do_sample
+  
 CUDA_VISIBLE_DEVICES=1 python -m scripts.runner_open_source \
   --model_name "/data/model/Qwen2.5-7B-Instruct" \
   --benchmark_path "configs/jp_benchmark_320.jsonl" \

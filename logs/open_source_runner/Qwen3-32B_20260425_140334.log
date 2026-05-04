@@ -1,0 +1,15 @@
+2026-04-25 14:03:38.350263: I tensorflow/core/util/port.cc:113] oneDNN custom operations are on. You may see slightly different numerical results due to floating-point round-off errors from different computation orders. To turn them off, set the environment variable `TF_ENABLE_ONEDNN_OPTS=0`.
+2026-04-25 14:03:38.423401: E external/local_xla/xla/stream_executor/cuda/cuda_dnn.cc:9261] Unable to register cuDNN factory: Attempting to register factory for plugin cuDNN when one has already been registered
+2026-04-25 14:03:38.423442: E external/local_xla/xla/stream_executor/cuda/cuda_fft.cc:607] Unable to register cuFFT factory: Attempting to register factory for plugin cuFFT when one has already been registered
+2026-04-25 14:03:38.427300: E external/local_xla/xla/stream_executor/cuda/cuda_blas.cc:1515] Unable to register cuBLAS factory: Attempting to register factory for plugin cuBLAS when one has already been registered
+2026-04-25 14:03:38.436858: I tensorflow/core/platform/cpu_feature_guard.cc:182] This TensorFlow binary is optimized to use available CPU instructions in performance-critical operations.
+To enable the following instructions: AVX2 AVX512F AVX512_VNNI AVX512_BF16 FMA, in other operations, rebuild TensorFlow with the appropriate compiler flags.
+2026-04-25 14:03:39.298374: W tensorflow/compiler/tf2tensorrt/utils/py_utils.cc:38] TF-TRT Warning: Could not find TensorRT
+`torch_dtype` is deprecated! Use `dtype` instead!
+Benchmark source: /home/liujiajun/JP-reliability/configs_v1/ja_v1.jsonl
+Discovered 1 benchmark file(s).
+ - /home/liujiajun/JP-reliability/configs_v1/ja_v1.jsonl
+
+Loading model: /data/model/Qwen3-32B
+Loading checkpoint shards:   0%|          | 0/17 [00:00<?, ?it/s]Loading checkpoint shards:   6%|▌         | 1/17 [00:00<00:14,  1.13it/s]Loading checkpoint shards:  12%|█▏        | 2/17 [00:01<00:13,  1.14it/s]Loading checkpoint shards:  18%|█▊        | 3/17 [00:02<00:12,  1.13it/s]Loading checkpoint shards:  24%|██▎       | 4/17 [00:03<00:10,  1.18it/s]Loading checkpoint shards:  29%|██▉       | 5/17 [00:04<00:10,  1.15it/s]Loading checkpoint shards:  35%|███▌      | 6/17 [00:05<00:09,  1.12it/s]Loading checkpoint shards:  41%|████      | 7/17 [00:06<00:09,  1.05it/s]Loading checkpoint shards:  47%|████▋     | 8/17 [00:06<00:06,  1.32it/s]Loading checkpoint shards:  71%|███████   | 12/17 [00:06<00:01,  3.49it/s]Loading checkpoint shards: 100%|██████████| 17/17 [00:06<00:00,  2.46it/s]
+Some parameters are on the meta device because they were offloaded to the cpu.
